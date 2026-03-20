@@ -13,47 +13,31 @@ database.connect('./db.sqlite')
 User.init(database)
 Event.init(database)
 
-
-# user = User()
-# user.name = "roos"
-# user.age = 11
-# user.save()
-
-# event = Event()
-# event.type = 0
-# event.data = "BLA bla"
-# event.creator = 1
-# event.save()
-
-print(Relationships.relations)
-user = User.get(pk=1)
-
-
-event = Event.get(pk=1)
-event.creator = None
-event.save()
-
-if user: 
-   for event in user.get_related("own_events"):
-       print("own:",event)
-   for event in user.get_related("events"):
-       print("to:",event)
-
 @app.get("/")
 def read_root():
     result = User.get_all()
-    return {"users":result}
+    events = Event.get_all()
+    return {"users":result, "events":events}
 
 @app.get("/search/{name}")
 def read_item(name: str):
-    users = User.database.filter(User,name=name)
+    users = User.filter(User,f"name={name}")
     return users
-    
 
-@app.get("/add/{name}/{age}")
+@app.get("/event/add/{creator}/{to}")
+def read_item(creator: str,to: str):
+    event = Event()
+    event.type = 0
+    event.data = "asd"
+    event.creator = User.filter(f"name='{creator}'")[0].pk
+    event.sendto = User.filter(f"name='{to}'")[0].pk
+    event.save()
+
+    return {"creator":event.creator, "to":event.sendto}
+
+@app.get("/user/add/{name}/{age}")
 def read_item(name: str, age: int):
     user = User()
-    
     user.name = name
     user.age = age
     user.save()

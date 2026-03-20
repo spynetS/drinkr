@@ -9,4 +9,4 @@ class Event(Model):
     sendto = ForeignKey(User(), "events")
    
     def __str__(self):
-        return f"{self.type} {self.data} {self.creator} {self.sendto}"
+        return f"<{self.type}, {self.data}, {self.creator}, {self.sendto}>"
