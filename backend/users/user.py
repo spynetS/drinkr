@@ -4,7 +4,7 @@ class User (Model):
 
     name = DataField("")
     age = DataField("","INTEGER")
-
+    
     def dict(self):
         return {
             "user":self.name,
