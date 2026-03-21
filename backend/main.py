@@ -28,7 +28,7 @@ Event.init(database)
 
 @app.get("/")
 def read_root():
-    return { "users":result }
+    return { "users":User.get_all() } 
 
 class UserCreate(BaseModel):
     name: str
