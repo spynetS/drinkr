@@ -30,6 +30,10 @@ export default function HomeScreen() {
 	const [playerName, setPlayerName] = useState("")
 
 	useEffect(()=>{
+		axios.get('/events')
+			.then(response => console.log(response))
+			.catch(error => console.error('Error fetching users:', error));
+
 		axios.get('/users')
 			.then(response => setPlayers(response.data))
 			.catch(error => console.error('Error fetching users:', error));

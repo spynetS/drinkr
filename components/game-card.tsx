@@ -1,6 +1,7 @@
 import { Image, View, Text, TouchableOpacity } from "react-native";
 import { StyleSheet } from 'react-native';
 import Button from '@/components/button';
+import axios from 'axios'
 
 interface Props {
   title: string;
@@ -11,6 +12,18 @@ interface Props {
 export default function GameCard({ color, title, description }: Props) {
 
 	let darkColor = darkenHexColor(color,0.7);
+
+	const play = () => {
+		axios.post('/events/',{
+			"data": description,
+			"type": 0,
+			"creator": 1,
+			"sendto": null
+		})
+			.then(response => console.log(response))
+			.catch(error => console.error('Error fetching users:', error));
+
+	}
 
   return (
     <View style={{
@@ -31,7 +44,7 @@ export default function GameCard({ color, title, description }: Props) {
       <Image source={require("@/assets/images/dice.png")} style={{ width: 80, height: 80 }} />
       <Text style={{ fontWeight: "800", color: "white", fontSize: 16, margin: 2 }}>{title}</Text>
       <Text style={{ fontWeight: "300", color: "#aaa", fontSize: 12, textAlign: "center", marginTop: 5, marginBottom: 10 }}>{description}</Text>
-      <Button text={"PLAY"} color={color}/>
+      <Button onPress={play} text={"PLAY"} color={color}/>
     </View>
   );
 }
