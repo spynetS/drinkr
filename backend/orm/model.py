@@ -31,7 +31,7 @@ class Model:
     migrated = False
     database = None
     table_name = ""
-    _pk = 0
+    max_pk = 0
     
     pk = DataField("","INTEGER PRIMARY KEY AUTOINCREMENT")
 
@@ -124,14 +124,22 @@ class Model:
             index += 1
         
         return obj
-    
+
+    def delete(self):
+        if self._exists:
+            self.database.delete(self)
+            self._exists = False
+
     def save(self):
         self.__migrate__()
         if self._exists:
-            self.database.update(self)
+            result = self.database.update(self)
         else:
-            self.database.insert(self)
-            self._exists = True    
+            result = self.database.insert(self)
+            self.max_pk += 1
+            self.pk = self.max_pk
+            self._exists = True
+            
 
     @classmethod
     def __migrate__(cls):

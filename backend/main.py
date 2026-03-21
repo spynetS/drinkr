@@ -5,13 +5,11 @@ from users.user import User
 from users.event import Event
 from orm.relations import Relationships
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 app = FastAPI()
 
-origins = [
-    "http://localhost",
-    "http://localhost:8081",
-]
+origins = "*"
 
 app.add_middleware(
     CORSMiddleware,
@@ -30,31 +28,26 @@ Event.init(database)
 
 @app.get("/")
 def read_root():
-    result = User.get_all()
-    events = Event.get_all()
-    return {"users":result, "events":events}
+    return { "users":result }
 
-@app.get("/search/{name}")
-def read_item(name: str):
-    users = User.filter(User,f"name={name}")
-    return users
+class UserCreate(BaseModel):
+    name: str
 
-@app.get("/event/add/{creator}/{to}")
-def read_item(creator: str,to: str):
-    event = Event()
-    event.type = 0
-    event.data = "asd"
-    event.creator = User.filter(f"name='{creator}'")[0].pk
-    event.sendto = User.filter(f"name='{to}'")[0].pk
-    event.save()
-
-    return {"creator":event.creator, "to":event.sendto}
-
-@app.get("/user/add/{name}/{age}")
-def read_item(name: str, age: int):
-    user = User()
-    user.name = name
-    user.age = age
+@app.post("/user/")
+async def user_create(userReq: UserCreate):
+    user: User = User()
+    user.name = userReq.name
     user.save()
+    return user 
 
-    return {"name":user.name,"age":user.age}
+
+
+@app.delete("/user/{pk}")
+async def user_create(pk: int):
+    user: User = User.get(pk=pk)
+    user.delete()
+    return True
+
+@app.get("/users")
+async def user_create():
+    return User.get_all()

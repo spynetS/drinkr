@@ -40,7 +40,6 @@ class SQLiteDatabase(Database):
                         values += str(v) +", "
         columns = columns.rstrip(", ") + ")"
         values = values.rstrip(", ") + ")"
-        
 
         self.query(f"INSERT INTO {model.get_table_name()} {columns} VALUES {values}")
 
@@ -107,14 +106,15 @@ class SQLiteDatabase(Database):
             if isinstance(field, ForeignKey):
                 Relationships.init_relationship(field.related_name, key, cls)
                 columns.append(field.get_for(key))
-            
 
-            
         columns_str = ", ".join(columns)
-            
 
         sql = f"CREATE TABLE IF NOT EXISTS {cls.get_table_name()} ({columns_str})"
-        self.query(sql)        
+        self.query(sql)
+
+    def delete(self, model: Model):
+        q = f"DELETE FROM {model.get_table_name()} WHERE pk={model.pk}"
+        self.query(q)
 
     def query(self, query: str):
         with self.lock:
