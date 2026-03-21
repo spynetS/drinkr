@@ -111,8 +111,16 @@ class Model:
         setattr(obj, "pk", values[0])
         
         index = 1
+        print(values)
         for key in fields.keys():
-            setattr(obj, key, values[index])
+            if isinstance(fields[key], ForeignKey):
+                try:
+                    model = fields[key].model.get(pk=values[index])
+                    setattr(obj, key, model)
+                except:
+                    pass
+            else:
+                setattr(obj, key, values[index])
             index += 1
         
         return obj
