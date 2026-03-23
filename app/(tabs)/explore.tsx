@@ -1,112 +1,97 @@
 import { Image } from 'expo-image';
+import { useEffect, useState } from 'react';
 import { Platform, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
 
 export default function TabTwoScreen() {
+
+	const [users,setUsers] = useState([]);
+	const [events,setEvents] = useState([]);
+
+	const [name, setName] = useState("");
+	const [age, setAge] = useState(0);
+
+
+	useEffect(()=>{
+		fetch(`http://localhost:8000`).then(response=>{
+			if (!response.ok) {
+				throw new Error(`Response status: ${response.status}`);
+			}
+
+			response.json().then(result=>{
+				setUsers(result.users)
+			});
+		})
+
+		fetch(`http://localhost:8000`).then(response=>{
+			if (!response.ok) {
+				throw new Error(`Response status: ${response.status}`);
+			}
+
+			response.json().then(result=>{
+				setEvents(result.events)
+			});
+		})
+	
+	},[])
+
+
+	const add = () => {
+		fetch(`http://localhost:8000/user/add/${name}/${age}`).then(response=>{
+		  if (!response.ok) {
+				throw new Error(`Response status: ${response.status}`);
+			}
+
+			response.json().then(result=>{
+				console.log(result);
+			});
+		})
+	}
+
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <View>
+			<Text style={{color:"white"}} >Users</Text>
+			{users.map(user=>
+				<View style={styles.user}>
+					<Text style={{color:"white"}} >{user.name}</Text>
+				</View>
+			)}
+
+			<View style={{backgroundColor:"#aaa", marginTop:10}} >
+				<TextInput onChangeText={setName} style={styles.input} placeholder="Name" ></TextInput>
+				<TextInput onChangeText={setAge} style={styles.input} placeholder="Age" ></TextInput>
+
+				<TouchableOpacity style={styles.user} onPress={add} >
+					<Text>Add</Text>
+				</TouchableOpacity>
+				
+			</View>			
+
+			{events.map(event=>
+				<ScrollView style={styles.user}>
+					<Text style={{color:"white"}} >{event.data}</Text>
+					<Text style={{color:"white"}} >Creator: {event.creator ? event.creator.name : ""}</Text>
+					<Text style={{color:"white"}} >Sent to: {event.sendto ? event.sendto.name : ""}</Text>
+				</ScrollView>
+			)}
+		</View>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
+  user:{
+		backgroundColor:"gray",
+		margin:5,
+		borderRadius:10,
+		padding:10
+	},
+	input:{
+		backgroundColor:"lightgray",
+		margin:5,
+		borderRadius:10,
+		padding:10,
+		color:"black"
+	}
 });

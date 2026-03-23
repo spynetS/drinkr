@@ -1,0 +1,107 @@
+* How to use
+
+** To create a model
+
+#+BEGIN_SRC python
+from orm.model import Model, DataField    
+
+class User (Model):
+
+    name = DataField("")
+    age = DataField("","INTEGER")
+#+END_SRC
+
+This will create a user with a name as TEXT and a age as INTEGER. It will also
+include a automatic id named /pk/.
+
+#+BEGIN_SRC python
+from orm.model import Model, DataField, ForeignKey
+
+class Event (Model):
+
+    name = DataField("")
+    type = DataField("","INTEGER")
+    
+    # here we link the event to a user with a foreignkey
+    # the user can access the events related to it by the "events" name
+     creator = ForeignKey(User(),related_name="events")   
+#+END_SRC
+
+Here a new table of events is created. The event here connected to a user with a foreignkey.
+
+To use this read here 
+
+** Init the model
+Currently there is only SQLITE support and to init the model
+
+#+BEGIN_SRC python
+from orm.database import SQLiteDatabase
+
+# Create a database object and connect it
+database : SQLiteDatabase = SQLiteDatabase()
+database.connect('./db.sqlite')
+
+# Then init the user model
+User.init(database)
+#+END_SRC
+
+
+When you init the model it gets a bunch of static components that is used internaly.
+
+** Operating with models
+
+*** Create a new row
+#+BEGIN_SRC python
+user = User()
+user.name = "alfred"
+user.age = 12
+user.save()
+#+END_SRC
+
+*** Fetch a model
+#+BEGIN_SRC python
+user = User.get(pk=1)
+# takes in the search string for the database (sql)
+user = User.filter("name=alfred ")
+
+user = User.database.filter(name="alfred")
+
+#+END_SRC
+*** Update a row
+#+BEGIN_SRC python
+# get a user model someway
+user = User.get(pk=1)
+user.name = name
+user.age = age
+user.save()
+#+END_SRC
+
+*** ForeignKey
+
+#+BEGIN_SRC python
+user = User()
+user.name = "alfred"
+user.age = 12
+user.save()
+
+event = Event()
+event.name = "TestEvent"
+event.type = 0
+event.creator = user.pk
+event.save()
+
+event2 = Event()
+event2.name = "TestEvent2"
+event2.type = 1
+event2.creator = user.pk
+event2.save()
+
+# will print the creators name and age
+print(event.creator.name)
+print(event.creator.age)
+
+# this will print the events that are pointing to this user
+for event in user.get_related("events"):
+    print(event.name)
+
+#+END_SRC

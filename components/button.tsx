@@ -50,6 +50,7 @@ export default function Button(props: any) {
   return (
     <Animated.View style={{ transform: [{ scale }] }}>
       <TouchableOpacity
+				onPress={props.onPress}
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         activeOpacity={1}
