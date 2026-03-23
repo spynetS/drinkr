@@ -13,9 +13,14 @@ import { Avatar } from '@kolking/react-native-avatar';
 import { TextInput, View, Text, ImageBackground,TouchableOpacity, Modal } from "react-native";
 import { useState, useEffect } from "react"
 
+import axios from "axios"
+
 import GameCard from "@/components/game-card";
 
 const image = {uri: ''};
+
+axios.defaults.baseURL = 'http://localhost:8000';
+axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 
 export default function HomeScreen() {
@@ -25,53 +30,29 @@ export default function HomeScreen() {
 	const [playerName, setPlayerName] = useState("")
 
 	useEffect(()=>{
-		fetch(`http://192.168.1.170:8000/users`).then(response=>{
-				if (!response.ok) {
-					throw new Error(`Response status: ${response.status}`);
-				}
-			response.json().then(result=>{
-				setPlayers(result)
-			})
-		})
+		axios.get('/users')
+			.then(response => setPlayers(response.data))
+			.catch(error => console.error('Error fetching users:', error));
 	
 	},[])
 
 	const addUser = () => {
 
 		if (playerName === "") return;
-	
-		fetch(`http://192.168.1.170:8000/user/`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json"
-			},
-			body: JSON.stringify({
-				name: playerName
-			})
-		})
+
+		axios.post('/user/', { name: playerName })
 			.then(response => {
-				if (!response.ok) {
-					throw new Error(`Response status: ${response.status}`);
-				}
-				return response.json();
+				setPlayers(prev => [...prev, response.data]);
+				setPlayerName("");
 			})
-			.then(result => {
-				setPlayers(prev=>[...prev,result])
-				setPlayerName("")
-			})
-			.catch(error => {
-				console.error(error);
-			});
+			.catch(error => console.error(error));
+
 	};
 
 	const removePlayer = (rmPlayer) => {
-		fetch(`http://192.168.1.170:8000/user/${rmPlayer.pk}`, {
-			method:"DELETE"
-		}).then(response=>{
-			response.json().then(result=>{
-				console.log(result)
-			})
-		})
+
+		axios.delete(`/user/${rmPlayer.pk}`)
+			.then(response => console.log(response.data));
 
 		const filtered = players.filter(player => player.pk !== rmPlayer.pk);
 		setPlayers(filtered)
