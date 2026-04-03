@@ -72,6 +72,15 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="imposter"
+        options={{
+          title: 'Imposter',
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={22} name="paperplane.fill" color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
