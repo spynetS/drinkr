@@ -53,7 +53,7 @@ export async function savePlayer(player: Player) {
   return player;
 }
 
-export async function playerPenalty(player: Player) {
-  player.penalties = (player.penalties ?? 0) + 1;
+export async function playerPenelty(player: Player) {
+  player.penelties = (player.penelties ?? 0) + 1;
   return await savePlayer(player);
 }

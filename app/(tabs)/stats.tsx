@@ -4,13 +4,13 @@ import { getPlayers } from '@/components/api/utils';
 
 type Player = {
   name: string;
-  penalties: number;
+  penelties: number;
 };
 
 export default function StatsScreen() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [sortBy, setSortBy] = useState<'name' | 'penalties'>('penalties');
+  const [sortBy, setSortBy] = useState<'name' | 'penelties'>('penelties');
 
   const load = async () => {
     const data = await getPlayers();
@@ -26,11 +26,11 @@ export default function StatsScreen() {
   useEffect(() => { load(); }, []);
 
   const sorted = [...players].sort((a, b) =>
-    sortBy === 'penalties' ? b.penalties - a.penalties : a.name.localeCompare(b.name)
+    sortBy === 'penelties' ? b.penelties - a.penelties : a.name.localeCompare(b.name)
   );
 
-  const maxPenalties = Math.max(...players.map(p => p.penalties), 1);
-  const totalPenalties = players.reduce((sum, p) => sum + p.penalties, 0);
+  const maxPenelties = Math.max(...players.map(p => p.penelties), 1);
+  const totalPenelties = players.reduce((sum, p) => sum + p.penelties, 0);
 
   const getMedalColor = (index: number) => {
     if (index === 0) return '#f59e0b'; // gold
@@ -60,13 +60,13 @@ export default function StatsScreen() {
           </View>
           <View style={styles.pillDivider} />
           <View style={styles.pill}>
-            <Text style={styles.pillValue}>{totalPenalties}</Text>
-            <Text style={styles.pillLabel}>Total Penalties</Text>
+            <Text style={styles.pillValue}>{totalPenelties}</Text>
+            <Text style={styles.pillLabel}>Total Penelties</Text>
           </View>
           <View style={styles.pillDivider} />
           <View style={styles.pill}>
             <Text style={styles.pillValue}>
-              {players.length ? (totalPenalties / players.length).toFixed(1) : 0}
+              {players.length ? (totalPenelties / players.length).toFixed(1) : 0}
             </Text>
             <Text style={styles.pillLabel}>Avg</Text>
           </View>
@@ -75,11 +75,11 @@ export default function StatsScreen() {
         {/* Sort toggle */}
         <View style={styles.sortRow}>
           <TouchableOpacity
-            style={[styles.sortButton, sortBy === 'penalties' && styles.sortButtonActive]}
-            onPress={() => setSortBy('penalties')}
+            style={[styles.sortButton, sortBy === 'penelties' && styles.sortButtonActive]}
+            onPress={() => setSortBy('penelties')}
           >
-            <Text style={[styles.sortButtonText, sortBy === 'penalties' && styles.sortButtonTextActive]}>
-              By Penalties
+            <Text style={[styles.sortButtonText, sortBy === 'penelties' && styles.sortButtonTextActive]}>
+              By Penelties
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -109,15 +109,15 @@ export default function StatsScreen() {
         )}
 
         {sorted.map((player, index) => {
-          const barWidth = maxPenalties > 0 ? (player.penalties / maxPenalties) * 100 : 0;
-          const isWorst = sortBy === 'penalties' && index === 0 && player.penalties > 0;
+          const barWidth = maxPenelties > 0 ? (player.penelties / maxPenelties) * 100 : 0;
+          const isWorst = sortBy === 'penelties' && index === 0 && player.penelties > 0;
 
           return (
             <View key={player.name} style={[styles.playerRow, isWorst && styles.playerRowHighlight]}>
               {/* Rank */}
               <View style={[styles.rank, { backgroundColor: getMedalColor(index) + '22', borderColor: getMedalColor(index) + '55' }]}>
                 <Text style={[styles.rankText, { color: getMedalColor(index) }]}>
-                  {sortBy === 'penalties' ? index + 1 : '—'}
+                  {sortBy === 'penelties' ? index + 1 : '—'}
                 </Text>
               </View>
 
@@ -127,7 +127,7 @@ export default function StatsScreen() {
                   <Text style={styles.playerName}>{player.name}</Text>
                   {isWorst && (
                     <View style={styles.worstBadge}>
-                      <Text style={styles.worstBadgeText}>Most penalties</Text>
+                      <Text style={styles.worstBadgeText}>Most penelties</Text>
                     </View>
                   )}
                 </View>
@@ -137,14 +137,14 @@ export default function StatsScreen() {
                   <View style={[styles.barFill, { width: `${barWidth}%` as any }]} />
                 </View>
 
-                <Text style={styles.penaltySubtext}>
-                  {player.penalties} {player.penalties === 1 ? 'penalty' : 'penalties'}
+                <Text style={styles.peneltySubtext}>
+                  {player.penelties} {player.penelties === 1 ? 'penelty' : 'penelties'}
                 </Text>
               </View>
 
               {/* Count */}
-              <Text style={[styles.penaltyCount, player.penalties > 0 && styles.penaltyCountActive]}>
-                {player.penalties}
+              <Text style={[styles.peneltyCount, player.penelties > 0 && styles.peneltyCountActive]}>
+                {player.penelties}
               </Text>
             </View>
           );
@@ -331,19 +331,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#7c3aed',
     borderRadius: 2,
   },
-  penaltySubtext: {
+  peneltySubtext: {
     color: 'rgba(255,255,255,0.25)',
     fontSize: 10,
     letterSpacing: 0.3,
   },
-  penaltyCount: {
+  peneltyCount: {
     color: 'rgba(255,255,255,0.2)',
     fontSize: 22,
     fontWeight: '800',
     minWidth: 32,
     textAlign: 'right',
   },
-  penaltyCountActive: {
+  peneltyCountActive: {
     color: '#fca5a5',
   },
 
