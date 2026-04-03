@@ -2,12 +2,11 @@ import { Image } from 'expo-image';
 import { Platform, StyleSheet } from 'react-native';
 import Button from '@/components/button';
 
-import { router } from 'expo-router'
 import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 
 import { Avatar } from '@kolking/react-native-avatar';
 import { TextInput, View, Text, ImageBackground,TouchableOpacity, Modal } from "react-native";
@@ -24,12 +23,14 @@ axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 
 export default function HomeScreen() {
+  const [offline, setOffline] = useState(true);
   const [players,setPlayers] = useState([]);
 	const [isVisible, setVisible] = useState(false)
 
 	const [playerName, setPlayerName] = useState("")
 
 	useEffect(()=>{
+    if(!offline){
 		axios.get('/events')
 			.then(response => console.log(response))
 			.catch(error => console.error('Error fetching users:', error));
@@ -37,20 +38,24 @@ export default function HomeScreen() {
 		axios.get('/users')
 			.then(response => setPlayers(response.data))
 			.catch(error => console.error('Error fetching users:', error));
-	
+	  }
 	},[])
 
 	const addUser = () => {
 
 		if (playerName === "") return;
-
+    if (!offline) {
 		axios.post('/user/', { name: playerName })
 			.then(response => {
 				setPlayers(prev => [...prev, response.data]);
 				setPlayerName("");
 			})
 			.catch(error => console.error(error));
-
+    }
+    else{
+    	setPlayers(prev => [...prev, {name:playerName}]);
+      setPlayerName("")
+    }
 	};
 
 	const removePlayer = (rmPlayer) => {
@@ -103,7 +108,10 @@ export default function HomeScreen() {
 
 			<View style={styles.cardContainer} >
 				<GameCard color="#4a97e3" title="The classic" description="Pellentesque tristique imperdiet tortor.  "/>
-				<GameCard onPlay={()=>router.replace("imposter")} color="#ff43a5" title="Imposter" description="Everyone gets a word and are say another word associated with it. But one imposter doesnt know the word and are trying to fit in."/>
+				<GameCard onPlay={()=>router.push({pathname:"imposter", params:{
+          _players:JSON.stringify(players),
+          _offline:JSON.stringify(offline)
+        }})} color="#ff43a5" title="Imposter" description="Everyone gets a word and are say another word associated with it. But one imposter doesnt know the word and are trying to fit in."/>
 				<GameCard color="#fedd1c" title="The classic" description="Donec hendrerit tempor tellus.  "/>
 				<GameCard color="#4ffc8c" title="The classic" description="Donec posuere augue in quam.  "/>
 			</View>

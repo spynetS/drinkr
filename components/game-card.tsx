@@ -14,19 +14,16 @@ export default function GameCard({ color, title, description, onPlay }: Props) {
 	let darkColor = darkenHexColor(color,0.7);
 
 	const play = () => {
-		axios.post('/events/',{
-			"data": description,
-			"type": 0,
-			"creator": 1,
-			"sendto": null
-		})
-			.then(response =>{
-        console.log(response)
-        if(onPlay !== undefined)
-          onPlay()
-      }
-      )
-			.catch(error => console.error('Error fetching users:', error));
+
+		axios.post('/events/', {
+      data: description,
+      type: 0,
+      creator: 1,
+      sendto: null,
+    })
+      .then(response => console.log(response))
+      .catch(error => console.error('Error posting event:', error))
+      .finally(() => onPlay?.());
   
 	}
 

@@ -72,19 +72,9 @@ export default function ImposterView() {
   const [_players, _setPlayers] = useState([]);
   const [_words, _setWords] = useState([]);
 
-  const setImposter = (players, imposterIndex) => {
-    const pl = players.map((player, index) => ({
-      ...player,
-      imposter: index === imposterIndex,
-    }));
-    _setPlayers(pl);
-  };
-
   useEffect(() => {
-    const parsed = JSON.parse(players);
-    const index = Math.floor(Math.random() * parsed.length);
+    _setPlayers(JSON.parse(players));
     _setWords(JSON.parse(words));
-    setImposter(parsed, index);
   }, []);
 
   return (

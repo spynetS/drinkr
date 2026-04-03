@@ -4,8 +4,9 @@ import { Platform, StyleSheet } from 'react-native';
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
 import axios from "axios"
 import Button from "@/components/button"
-import { router } from 'expo-router'
 import { Dropdown } from 'react-native-element-dropdown';
+import { useLocalSearchParams, router } from 'expo-router';
+import { Checkbox } from 'expo-checkbox';
 
 const numImposterData = [
   { label: "1 Imposter", value: 1 },
@@ -55,11 +56,19 @@ export default function TabTwoScreen() {
   const [numImposters, setNumImposters] = useState(1);
   const [categoryFocus, setCategoryFocus] = useState(false);
   const [imposterFocus, setImposterFocus] = useState(false);
+  const [randomNumImposters, setRandomNumImposters] = useState(true);
+
+  const { _players, _offline } = useLocalSearchParams();
 
   useEffect(() => {
-    axios.get('/users')
+    if (!JSON.parse(_offline)){
+        axios.get('/users')
       .then(response => setPlayers(response.data))
       .catch(error => console.error('Error fetching users:', error));
+    }
+    else{
+      setPlayers(JSON.parse(_players))
+    }
 
     let cats = [];
     for (let key in data) {
@@ -68,6 +77,26 @@ export default function TabTwoScreen() {
     }
     setCategories(cats);
   }, []);
+
+  const getImposterPlayers = () => {
+    let nI = numImposters;
+    if (randomNumImposters) {
+      const min = 1;
+      const max = nI;
+      nI = Math.floor(Math.random() * (max - min + 1) + min);
+    }
+  
+    let imposterIndexes = [];
+    for(let i = 0; i < nI; i ++){
+      imposterIndexes.push(Math.floor(Math.random() * players.length))
+    }
+    const pl = players.map((player, index) => ({
+      ...player,
+      imposter: imposterIndexes.includes(index),
+    }));
+    console.log(pl)
+    return pl;
+  }
 
   return (
     <View style={styles.container}>
@@ -136,6 +165,10 @@ export default function TabTwoScreen() {
               setImposterFocus(false);
             }}
           />
+          <View style={{flex:1, flexDirection:"row", alignItems:"center", marginTop:"12px"}}>
+            <Checkbox value={randomNumImposters} onValueChange={setRandomNumImposters} />
+            <Text style={styles.pipLabel}>Randomize number of imposter</Text>
+          </View>
         </View>
 
         {/* Imposter pip indicators */}
@@ -162,7 +195,7 @@ export default function TabTwoScreen() {
             router.push({
               pathname: "/imposter_view",
               params: {
-                players: JSON.stringify(players),
+                players: JSON.stringify(getImposterPlayers()),
                 words: JSON.stringify(data[category]),
               },
             });
