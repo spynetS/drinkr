@@ -9,7 +9,7 @@ interface Props {
   color: string;
 }
 
-export default function GameCard({ color, title, description }: Props) {
+export default function GameCard({ color, title, description, onPlay }: Props) {
 
 	let darkColor = darkenHexColor(color,0.7);
 
@@ -20,9 +20,14 @@ export default function GameCard({ color, title, description }: Props) {
 			"creator": 1,
 			"sendto": null
 		})
-			.then(response => console.log(response))
+			.then(response =>{
+        console.log(response)
+        if(onPlay !== undefined)
+          onPlay()
+      }
+      )
 			.catch(error => console.error('Error fetching users:', error));
-
+  
 	}
 
   return (

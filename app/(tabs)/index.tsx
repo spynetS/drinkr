@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { Platform, StyleSheet } from 'react-native';
 import Button from '@/components/button';
 
-
+import { router } from 'expo-router'
 import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
@@ -103,7 +103,7 @@ export default function HomeScreen() {
 
 			<View style={styles.cardContainer} >
 				<GameCard color="#4a97e3" title="The classic" description="Pellentesque tristique imperdiet tortor.  "/>
-				<GameCard color="#ff43a5" title="The classic" description="Phasellus neque orci, porta a, aliquet quis, semper a, massa.  "/>
+				<GameCard onPlay={()=>router.replace("imposter")} color="#ff43a5" title="Imposter" description="Everyone gets a word and are say another word associated with it. But one imposter doesnt know the word and are trying to fit in."/>
 				<GameCard color="#fedd1c" title="The classic" description="Donec hendrerit tempor tellus.  "/>
 				<GameCard color="#4ffc8c" title="The classic" description="Donec posuere augue in quam.  "/>
 			</View>
