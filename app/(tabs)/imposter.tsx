@@ -142,8 +142,7 @@ export default function TabTwoScreen() {
               router.push({
                 pathname: "/imposter_view",
                 params: {
-                  players: JSON.stringify(players),
-                  words: JSON.stringify(getWords(category)),
+                  category:category
                 },
               });
             })

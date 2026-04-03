@@ -4,6 +4,9 @@ import { Platform, StyleSheet, Modal } from 'react-native';
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "react-native";
 import { useLocalSearchParams, router } from 'expo-router';
 import FlipCard from 'react-native-flip-card';
+import { playerPenalty } from "@/components/api/utils"
+import { getImposterPlayers } from "@/components/api/imposter"
+import { getWords } from "@/components/api/imposter"
 
 const Card = ({ player, word }) => {
   const cardBase = {
@@ -77,7 +80,7 @@ const ResultModal = ({ visible, onClose, onResult }) => {
           {/* Options */}
           <TouchableOpacity
             style={styles.imposterWinButton}
-            onPress={() => onResult("crewmates")}
+            onPress={() => onResult("imposters")}
             activeOpacity={0.8}
           >
             <Text style={styles.imposterWinIcon}>⚠</Text>
@@ -89,7 +92,7 @@ const ResultModal = ({ visible, onClose, onResult }) => {
 
           <TouchableOpacity
             style={styles.crewmateWinButton}
-            onPress={() => onResult("imposters")}
+            onPress={() => onResult("crewmates")}
             activeOpacity={0.8}
           >
             <Text style={styles.crewmateWinIcon}>✓</Text>
@@ -112,22 +115,27 @@ const ResultModal = ({ visible, onClose, onResult }) => {
 };
 
 export default function ImposterView() {
-  const { players, words } = useLocalSearchParams();
-
-  const [_players, _setPlayers] = useState([]);
+  const [players, setPlayers] = useState([]);
   const [word, setWord] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
 
+  const {category} = useLocalSearchParams();
+
   useEffect(() => {
-    _setPlayers(JSON.parse(players));
-    const _words = JSON.parse(words);
-    setWord(_words[Math.floor(Math.random() * _words.length)]);
+    getImposterPlayers().then(setPlayers).catch()
+    const words = getWords(category)
+    console.log(words)
+    setWord(words[Math.floor(Math.random() * words.length)]);
   }, []);
 
   const handleResult = (winner) => {
     setModalVisible(false);
-    // TODO: save result if needed
-    console.log(`TODO: Losers should get a penelty`);
+    players.forEach(player=>{
+      if((winner === "imposters" && player.imposter === false) ||
+        (winner === "crewmates" && player.imposter === true)){
+        playerPenalty(player);
+      }
+    })
     router.back();
   };
 
@@ -151,7 +159,7 @@ export default function ImposterView() {
 
       {/* Cards grid */}
       <ScrollView contentContainerStyle={styles.grid}>
-        {_players.map((player, i) => (
+        {players.map((player, i) => (
           <Card key={i} player={player} word={word} />
         ))}
       </ScrollView>

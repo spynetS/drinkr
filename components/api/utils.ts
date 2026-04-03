@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 type Player = {
   name: string;
   pk?: number;
+  penelties?:number;
 };
 
 
@@ -40,5 +41,19 @@ export async function getPlayers() : Promise<void> {
   }
 }
 
+export async function savePlayer(player: Player) {
+  let players = await getPlayers();
+  const index = players.findIndex(p => ((p.pk !== undefined && player.pk !== undefined ) && p.pk === player.pk) || p.name === player.name);
+  if (index === -1) {
+    players.push(player);
+  } else {
+    players[index] = player;
+  }
+  await savePlayers(players);
+  return player;
+}
 
-
+export async function playerPenalty(player: Player) {
+  player.penalties = (player.penalties ?? 0) + 1;
+  return await savePlayer(player);
+}
