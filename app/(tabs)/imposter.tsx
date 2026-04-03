@@ -8,13 +8,6 @@ import { Dropdown } from 'react-native-element-dropdown';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Checkbox } from 'expo-checkbox';
 
-const numImposterData = [
-  { label: "1 Imposter", value: 1 },
-  { label: "2 Imposters", value: 2 },
-  { label: "3 Imposters", value: 3 },
-  { label: "4 Imposters", value: 4 },
-];
-
 const data = {
   "food_and_drink": [
     { "word": "Espresso", "hint": "A caffeinated beverage" },
@@ -78,21 +71,26 @@ export default function TabTwoScreen() {
     setCategories(cats);
   }, []);
 
+  const getImposterData = () => {
+    return players.map((player, index) => ({
+      label: `${index + 1} Imposter${index > 0 ? "s" : ""}`,
+      value: index + 1,
+    }));
+  };
+
+
   const getImposterPlayers = () => {
     let nI = numImposters;
-    if (randomNumImposters) {
+
+    if (randomNumImposters === true) {
       const min = 1;
       const max = nI;
       nI = Math.floor(Math.random() * (max - min + 1) + min);
     }
-  
-    let imposterIndexes = [];
-    for(let i = 0; i < nI; i ++){
-      imposterIndexes.push(Math.floor(Math.random() * players.length))
-    }
-    const pl = players.map((player, index) => ({
+    const shuffled = [...players].sort(() => Math.random() - 0.5);
+    const pl = shuffled.map((player, index) => ({
       ...player,
-      imposter: imposterIndexes.includes(index),
+      imposter: index < nI
     }));
     console.log(pl)
     return pl;
@@ -152,7 +150,7 @@ export default function TabTwoScreen() {
             containerStyle={styles.dropdownContainer}
             itemTextStyle={styles.itemTextStyle}
             activeColor="rgba(124,58,237,0.2)"
-            data={numImposterData}
+            data={getImposterData()}
             maxHeight={220}
             labelField="label"
             valueField="value"
