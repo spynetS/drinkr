@@ -11,7 +11,7 @@ import { Link, router } from 'expo-router';
 import { Avatar } from '@kolking/react-native-avatar';
 import { TextInput, View, Text, ImageBackground,TouchableOpacity, Modal } from "react-native";
 import { useState, useEffect } from "react"
-
+import { getPlayers, addPlayer, removePlayer } from "@/components/api/utils"
 import axios from "axios"
 
 import GameCard from "@/components/game-card";
@@ -39,33 +39,17 @@ export default function HomeScreen() {
 			.then(response => setPlayers(response.data))
 			.catch(error => console.error('Error fetching users:', error));
 	  }
+    getPlayers().then(setPlayers).catch()
 	},[])
 
 	const addUser = () => {
-
 		if (playerName === "") return;
-    if (!offline) {
-		axios.post('/user/', { name: playerName })
-			.then(response => {
-				setPlayers(prev => [...prev, response.data]);
-				setPlayerName("");
-			})
-			.catch(error => console.error(error));
-    }
-    else{
-    	setPlayers(prev => [...prev, {name:playerName}]);
+
+    addPlayer({name:playerName}).then(player=>{
       setPlayerName("")
-    }
+      setPlayers(prev=>[...prev,player])
+    }).catch()
 	};
-
-	const removePlayer = (rmPlayer) => {
-
-		axios.delete(`/user/${rmPlayer.pk}`)
-			.then(response => console.log(response.data));
-
-		const filtered = players.filter(player => player.pk !== rmPlayer.pk);
-		setPlayers(filtered)
-	}
 
   return (
 		<ImageBackground
@@ -94,7 +78,10 @@ export default function HomeScreen() {
 				<View style={{flexDirection:"row", justifyContent:"flex-start", alignItems:"flex-start", width:"100%",}} >
 					{players.map((e,index) =>
 						<View key={index} style={{alignItems: "center", gap:3, marginLeft: 5, marginRight:5}} >
-							<TouchableOpacity onPress={()=>removePlayer(e)} >
+							<TouchableOpacity onPress={()=>removePlayer(e).then(()=>{
+                const filtered = players.filter(player => player.pk !== e.pk);
+		            setPlayers(filtered)
+              }).catch()} >
 								<Avatar colorize={true} name={e.name} size={30} />
 							</TouchableOpacity>								
 							<Text style={{fontSize:12, color:"white"}}>{e.name}</Text>

@@ -7,39 +7,10 @@ import Button from "@/components/button"
 import { Dropdown } from 'react-native-element-dropdown';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Checkbox } from 'expo-checkbox';
+import { getPlayers } from "@/components/api/utils"
+import { getCategories, getWords, getImposterPlayers, saveNumImposters2 } from "@/components/api/imposter"
 
-const data = {
-  "food_and_drink": [
-    { "word": "Espresso", "hint": "A caffeinated beverage" },
-    { "word": "Sushi", "hint": "A dish from Japan" },
-    { "word": "Pizza", "hint": "A popular Italian export" },
-    { "word": "Taco", "hint": "A handheld Mexican meal" }
-  ],
-  "famous_places": [
-    { "word": "Eiffel Tower", "hint": "A famous European landmark" },
-    { "word": "Mount Everest", "hint": "A very high elevation" },
-    { "word": "Hollywood", "hint": "Associated with the film industry" },
-    { "word": "The Colosseum", "hint": "An ancient sports arena" }
-  ],
-  "occupations": [
-    { "word": "Surgeon", "hint": "Someone who works in a hospital" },
-    { "word": "Astronaut", "hint": "A person who travels very far" },
-    { "word": "Chef", "hint": "A professional who prepares food" },
-    { "word": "Librarian", "hint": "Someone who works with books" }
-  ],
-  "objects": [
-    { "word": "Smartphone", "hint": "A common handheld electronic" },
-    { "word": "Umbrella", "hint": "Used for protection from weather" },
-    { "word": "Telescope", "hint": "Used to see things far away" },
-    { "word": "Piano", "hint": "A large musical instrument" }
-  ],
-  "animals": [
-    { "word": "Penguin", "hint": "A bird that cannot fly" },
-    { "word": "Chameleon", "hint": "An animal known for blending in" },
-    { "word": "Elephant", "hint": "A very large land mammal" },
-    { "word": "Shark", "hint": "A dangerous underwater predator" }
-  ]
-};
+
 
 export default function TabTwoScreen() {
   const [words, setWords] = useState([]);
@@ -54,21 +25,15 @@ export default function TabTwoScreen() {
   const { _players, _offline } = useLocalSearchParams();
 
   useEffect(() => {
-    if (!JSON.parse(_offline)){
-        axios.get('/users')
-      .then(response => setPlayers(response.data))
-      .catch(error => console.error('Error fetching users:', error));
-    }
-    else{
-      setPlayers(JSON.parse(_players))
-    }
+    getPlayers().then(setPlayers).catch()
 
-    let cats = [];
-    for (let key in data) {
-      const key_formatted = key.replaceAll("_", " ");
-      cats.push({ label: key_formatted, value: key });
-    }
-    setCategories(cats);
+    // get the categories and set it in the state formatted
+    setCategories(getCategories().map(cat=>{
+      const key_formatted = cat.replaceAll("_", " ");
+      return { label: key_formatted, value: cat };
+    }))
+
+  
   }, []);
 
   const getImposterData = () => {
@@ -77,24 +42,6 @@ export default function TabTwoScreen() {
       value: index + 1,
     }));
   };
-
-
-  const getImposterPlayers = () => {
-    let nI = numImposters;
-
-    if (randomNumImposters === true) {
-      const min = 1;
-      const max = nI;
-      nI = Math.floor(Math.random() * (max - min + 1) + min);
-    }
-    const shuffled = [...players].sort(() => Math.random() - 0.5);
-    const pl = shuffled.map((player, index) => ({
-      ...player,
-      imposter: index < nI
-    }));
-    console.log(pl)
-    return pl;
-  }
 
   return (
     <View style={styles.container}>
@@ -160,6 +107,7 @@ export default function TabTwoScreen() {
             onBlur={() => setImposterFocus(false)}
             onChange={item => {
               setNumImposters(item.value);
+              saveNumImposters(item.value);
               setImposterFocus(false);
             }}
           />
@@ -190,13 +138,15 @@ export default function TabTwoScreen() {
           style={[styles.startButton, (!category) && styles.startButtonDisabled]}
           onPress={() => {
             if (!category) return;
-            router.push({
-              pathname: "/imposter_view",
-              params: {
-                players: JSON.stringify(getImposterPlayers()),
-                words: JSON.stringify(data[category]),
-              },
-            });
+            getImposterPlayers().then(players => {
+              router.push({
+                pathname: "/imposter_view",
+                params: {
+                  players: JSON.stringify(players),
+                  words: JSON.stringify(getWords(category)),
+                },
+              });
+            })
           }}
           activeOpacity={0.8}
         >

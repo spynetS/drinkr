@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
-import { Platform, StyleSheet } from 'react-native';
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { Platform, StyleSheet, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "react-native";
 import { useLocalSearchParams, router } from 'expo-router';
 import FlipCard from 'react-native-flip-card';
 
@@ -24,11 +24,7 @@ const Card = ({ player, word }) => {
 
   return (
     <View style={styles.cardWrapper}>
-      <FlipCard
-        flip={false}
-        clickable={true}
-        style={styles.flipCard}
-      >
+      <FlipCard flip={false} clickable={true} style={styles.flipCard}>
         {/* Front */}
         <View style={[cardBase, glassStyle]}>
           <View style={styles.iconContainer}>
@@ -66,22 +62,81 @@ const Card = ({ player, word }) => {
   );
 };
 
+const ResultModal = ({ visible, onClose, onResult }) => {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalCard}>
+          {/* Header */}
+          <Text style={styles.modalEyebrow}>ROUND OVER</Text>
+          <Text style={styles.modalTitle}>Who won?</Text>
+          <Text style={styles.modalSubtitle}>Select the winning team to record the result</Text>
+
+          <View style={styles.modalDivider} />
+
+          {/* Options */}
+          <TouchableOpacity
+            style={styles.imposterWinButton}
+            onPress={() => onResult("crewmates")}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.imposterWinIcon}>⚠</Text>
+            <View>
+              <Text style={styles.imposterWinTitle}>Imposters Won</Text>
+              <Text style={styles.imposterWinSub}>The crew was fooled</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.crewmateWinButton}
+            onPress={() => onResult("imposters")}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.crewmateWinIcon}>✓</Text>
+            <View>
+              <Text style={styles.crewmateWinTitle}>Crewmates Won</Text>
+              <Text style={styles.crewmateWinSub}>The imposter was caught</Text>
+            </View>
+          </TouchableOpacity>
+
+          <View style={styles.modalDivider} />
+
+          {/* Cancel */}
+          <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
+            <Text style={styles.modalCancel}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
 export default function ImposterView() {
   const { players, words } = useLocalSearchParams();
 
   const [_players, _setPlayers] = useState([]);
-  const [_words, _setWords] = useState([]);
+  const [word, setWord] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     _setPlayers(JSON.parse(players));
-    _setWords(JSON.parse(words));
+    const _words = JSON.parse(words);
+    setWord(_words[Math.floor(Math.random() * _words.length)]);
   }, []);
 
+  const handleResult = (winner) => {
+    setModalVisible(false);
+    // TODO: save result if needed
+    console.log(`TODO: Losers should get a penelty`);
+    router.back();
+  };
+
   return (
-    <View style={styles.container}>
-      {/* Background glow blobs */}
-      <View style={styles.glowTopLeft} />
-      <View style={styles.glowBottomRight} />
+    <SafeAreaView style={styles.container}>
+      <View pointerEvents="none">
+        <View style={styles.glowTopLeft} />
+        <View style={styles.glowBottomRight} />
+      </View>
 
       {/* Header */}
       <View style={styles.header}>
@@ -95,17 +150,27 @@ export default function ImposterView() {
       </View>
 
       {/* Cards grid */}
-      <View style={styles.grid}>
+      <ScrollView contentContainerStyle={styles.grid}>
         {_players.map((player, i) => (
-          <Card key={i} player={player} word={_words[0]} />
+          <Card key={i} player={player} word={word} />
         ))}
-      </View>
+      </ScrollView>
 
       {/* Footer */}
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.8}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => setModalVisible(true)}
+        activeOpacity={0.8}
+      >
         <Text style={styles.backButtonText}>← New Game</Text>
       </TouchableOpacity>
-    </View>
+
+      <ResultModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onResult={handleResult}
+      />
+    </SafeAreaView>
   );
 }
 
@@ -115,8 +180,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#0f0f18",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 48,
-    paddingHorizontal: 20,
   },
 
   // Glow blobs
@@ -143,6 +206,8 @@ const styles = StyleSheet.create({
   header: {
     alignItems: "center",
     gap: 10,
+    paddingTop: 12,
+    paddingHorizontal: 20,
   },
   eyebrow: {
     color: "rgba(196,181,253,0.7)",
@@ -175,18 +240,18 @@ const styles = StyleSheet.create({
 
   // Cards grid
   grid: {
-    flex: 1,
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
     alignItems: "center",
     gap: 14,
     paddingVertical: 20,
+    paddingHorizontal: 16,
   },
 
   // Card
   cardWrapper: {
-    width: "42%",
+    width: "40%",
     aspectRatio: 0.75,
   },
   flipCard: {
@@ -311,11 +376,124 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 28,
     paddingVertical: 14,
+    marginBottom: 12,
   },
   backButtonText: {
     color: "rgba(255,255,255,0.5)",
     fontSize: 13,
     fontWeight: "600",
     letterSpacing: 0.5,
+  },
+
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: 380,
+    backgroundColor: "#16162a",
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.5,
+    shadowRadius: 40,
+    elevation: 20,
+  },
+  modalEyebrow: {
+    color: "rgba(196,181,253,0.7)",
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 3,
+    textAlign: "center",
+    marginBottom: 6,
+  },
+  modalTitle: {
+    color: "#f1f0ff",
+    fontSize: 26,
+    fontWeight: "800",
+    textAlign: "center",
+    letterSpacing: -0.3,
+    marginBottom: 6,
+  },
+  modalSubtitle: {
+    color: "rgba(255,255,255,0.3)",
+    fontSize: 12,
+    textAlign: "center",
+    letterSpacing: 0.2,
+  },
+  modalDivider: {
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    marginVertical: 20,
+  },
+
+  // Imposter win button
+  imposterWinButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    backgroundColor: "rgba(239,68,68,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(239,68,68,0.3)",
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 12,
+  },
+  imposterWinIcon: {
+    fontSize: 28,
+  },
+  imposterWinTitle: {
+    color: "#fca5a5",
+    fontSize: 16,
+    fontWeight: "700",
+    letterSpacing: 0.2,
+  },
+  imposterWinSub: {
+    color: "rgba(252,165,165,0.5)",
+    fontSize: 12,
+    marginTop: 2,
+  },
+
+  // Crewmate win button
+  crewmateWinButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    backgroundColor: "rgba(52,211,153,0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(52,211,153,0.25)",
+    borderRadius: 16,
+    padding: 18,
+  },
+  crewmateWinIcon: {
+    fontSize: 28,
+    color: "#6ee7b7",
+  },
+  crewmateWinTitle: {
+    color: "#6ee7b7",
+    fontSize: 16,
+    fontWeight: "700",
+    letterSpacing: 0.2,
+  },
+  crewmateWinSub: {
+    color: "rgba(110,231,183,0.5)",
+    fontSize: 12,
+    marginTop: 2,
+  },
+
+  // Cancel
+  modalCancel: {
+    color: "rgba(255,255,255,0.25)",
+    fontSize: 13,
+    textAlign: "center",
+    letterSpacing: 0.3,
   },
 });
