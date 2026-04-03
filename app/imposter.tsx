@@ -46,9 +46,10 @@ export default function TabTwoScreen() {
   return (
     <View style={styles.container}>
       {/* Background glow blobs */}
-      <View style={styles.glowTopLeft} />
-      <View style={styles.glowBottomRight} />
-
+      <View>
+        <View style={styles.glowTopLeft} />
+        <View style={styles.glowBottomRight} />
+      </View>
       <View style={styles.card}>
         {/* Header */}
         <View style={styles.header}>

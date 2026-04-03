@@ -127,15 +127,19 @@ export default function ImposterView() {
     console.log(words)
     setWord(words[Math.floor(Math.random() * words.length)]);
   }, []);
-
-  const handleResult = (winner) => {
+  
+  const handleResult = async (winner) => {
     setModalVisible(false);
-    players.forEach(player=>{
-      if((winner === "imposters" && player.imposter === false) ||
-        (winner === "crewmates" && player.imposter === true)){
-        playerPenalty(player);
+
+    for (const player of players) {
+      if (
+        (winner === "imposters" && player.imposter === false) ||
+          (winner === "crewmates" && player.imposter === true)
+      ) {
+        await playerPenalty(player);
       }
-    })
+    }
+
     router.back();
   };
 
