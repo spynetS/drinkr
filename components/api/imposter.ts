@@ -34,8 +34,14 @@ export async function getImposterPlayers() {
 returns a list of words associated with a category
 */
 export function getWords(category: string): Word[] {
+  if(category === "Random") {
+    const categories = getCategories();
+    const randomCat = categories[Math.floor(Math.random() * categories.length-1)+1];
+    return words[randomCat];
+  }
   return words[category];
 }
+
 export function getCategories(): string[] {
-  return Object.keys(words);
+  return ["Random"].concat(Object.keys(words));
 }
