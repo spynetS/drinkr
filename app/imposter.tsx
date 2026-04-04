@@ -8,7 +8,7 @@ import { Dropdown } from 'react-native-element-dropdown';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Checkbox } from 'expo-checkbox';
 import { getPlayers } from "@/components/api/utils"
-import { getCategories, getWords, getImposterPlayers, saveNumImposters2 } from "@/components/api/imposter"
+import { getCategories, getWords, getImposterPlayers, saveNumImposters } from "@/components/api/imposter"
 
 
 
