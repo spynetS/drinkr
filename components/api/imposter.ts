@@ -6,26 +6,35 @@ export async function saveNumImposters(numImposters: number) {
   console.log("saving", numImposters)
   await AsyncStorage.setItem('numImposters', JSON.stringify(numImposters));
 }
+
 export async function getImposterPlayers() {
   const raw = await AsyncStorage.getItem('numImposters');
   const players = await getPlayers();
 
-  let nI: number = raw ? JSON.parse(raw) : 1; // fallback to 1
+  let nI: number = raw ? JSON.parse(raw) : 1;
   let randomNumImposters = true;
 
-  
-  if (randomNumImposters) {
+  // in 1/10 all players are imposters
+  if(Math.floor(Math.random() * 10) === 1) {
+    nI = players.length;
+  }
+  else if (randomNumImposters) {
     const min = 1;
     const max = nI;
-    nI = Math.floor(Math.random() * (max - min + 1) + min);
+    // we have weightedrandom so its less probeble to have more imposters
+    const weightedRandom = Math.random() * Math.random(); 
+    nI = Math.floor(weightedRandom * (max - min + 1) + min);
   }
 
+  // shuffle the players
+  // set the random players to imposter
+  // then we shuffle again so the imposters arnt in order
   const shuffled = [...players].sort(() => Math.random() - 0.5);
-
   const pl = shuffled.map((player, index) => ({
     ...player,
     imposter: index < nI,
   }));
+
 
   return [...pl].sort(() => Math.random() - 0.5);
 }
