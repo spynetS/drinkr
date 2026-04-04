@@ -78,10 +78,7 @@ export default function HomeScreen() {
 				<View style={{flexDirection:"row", justifyContent:"flex-start", alignItems:"flex-start", width:"100%",}} >
 					{players.map((e,index) =>
 						<View key={index} style={{alignItems: "center", gap:3, marginLeft: 5, marginRight:5}} >
-							<TouchableOpacity onPress={()=>removePlayer(e).then(()=>{
-                const filtered = players.filter(player => player.pk !== e.pk);
-		            setPlayers(filtered)
-              }).catch()} >
+							<TouchableOpacity onPress={()=>removePlayer(e).then(setPlayers).catch()} >
 								<Avatar colorize={true} name={e.name} size={30} />
 							</TouchableOpacity>								
 							<Text style={{fontSize:12, color:"white"}}>{e.name}</Text>

@@ -6,6 +6,9 @@ type Player = {
   penelties?:number;
 };
 
+function playerEquals(p1:Player, p2:Player) {
+  return (p1.pk !== undefined && p2.pk !== undefined && p1.pk == p2.pk) || p1.name === p2.name;
+}
 
 export async function savePlayers(players:Player[]) {
   console.log("saving", players)
@@ -24,8 +27,9 @@ export async function addPlayer(player:Player) {
 export async function removePlayer(player: Player) {
   const raw = await AsyncStorage.getItem("players");
   let players: Player[] = raw ? JSON.parse(raw) : [];
-  players = players.filter(p => p.pk !== player.pk);
+  players = players.filter(p => !playerEquals(p,player));
   await savePlayers(players);
+  return players;
 }
 /**
 Returns the players
