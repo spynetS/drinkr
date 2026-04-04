@@ -4,7 +4,7 @@ import { Platform, StyleSheet, Modal } from 'react-native';
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "react-native";
 import { useLocalSearchParams, router } from 'expo-router';
 import FlipCard from 'react-native-flip-card';
-import { playerxPenelty } from "@/components/api/utils"
+import { playerPenelty } from "@/components/api/utils"
 import { getImposterPlayers } from "@/components/api/imposter"
 import { getWords } from "@/components/api/imposter"
 
