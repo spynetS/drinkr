@@ -22,27 +22,33 @@ export default function LobbyScreen() {
   const [isImposter, setIsImposter] = useState(false);
   const [showRole, setShowRole] = useState(false);
 
+  const [subs, setSubs] = useState([])
+
+  const disconnect = () => {
+    subs.forEach(sub=>{sub()});
+    setConnected(false);
+  }
 
   const connect = () => {
-    
-    
     publish(lobby+"/players/add", {name:playerName})
-  
-    subscribe(lobby + "/players/penalty", (payload) => {
+
+    let _subs = subs;
+    _subs.push(subscribe(lobby + "/players/penalty", (payload) => {
       if (playerName === payload.name) {
         setPenaltyVisible(true);
       }
-    });
-    subscribe(lobby + "/players/imposter", (payload) => {
+    }));
+    _subs.push(subscribe(lobby + "/players/imposter", (payload) => {
       console.log(payload)
       if (playerName === payload.name) {
         setIsImposter(payload.imposter)
         setShowRole(true)
       }
-    });
-    subscribe(lobby + "/startGame", (payload) => {
+    }));
+    _subs.push(subscribe(lobby + "/startGame", (payload) => {
       setEvents(prev => [...prev, payload]);
-    });
+    }));
+    setSubs(_subs)
     setConnected(true);
   };
 
@@ -63,21 +69,22 @@ export default function LobbyScreen() {
         </View>
 
         {/* Card */}
+        {!connected ? (
         <View style={styles.card}>
           {/* Lobby code */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>LOBBY CODE</Text>
-            <TextInput
-              placeholder="e.g. XKCD42"
-              placeholderTextColor="rgba(255,255,255,0.25)"
-              value={lobby}
-              style={[styles.input, lobbyFocus && styles.inputFocused]}
-              onChangeText={setLobby}
-              onFocus={() => setLobbyFocus(true)}
-              onBlur={() => setLobbyFocus(false)}
-              autoCapitalize="characters"
-            />
-          </View>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>LOBBY CODE</Text>
+              <TextInput
+                placeholder="e.g. XKCD42"
+                placeholderTextColor="rgba(255,255,255,0.25)"
+                value={lobby}
+                style={[styles.input, lobbyFocus && styles.inputFocused]}
+                onChangeText={setLobby}
+                onFocus={() => setLobbyFocus(true)}
+                onBlur={() => setLobbyFocus(false)}
+                autoCapitalize="characters"
+              />
+            </View>
 
           {/* Player name */}
           <View style={styles.fieldGroup}>
@@ -106,7 +113,15 @@ export default function LobbyScreen() {
               {connected ? "✓  Connected" : "Connect to Lobby"}
             </Text>
           </TouchableOpacity>
-        </View>
+        </View>) : (     <TouchableOpacity
+                           style={[styles.connectButton, (!lobby || !playerName) && styles.connectButtonDisabled]}
+                           onPress={disconnect}
+                           activeOpacity={0.8}
+                           disabled={!lobby || !playerName}>
+                           <Text style={styles.connectButtonText}>
+                             Disconnect
+                           </Text>
+                         </TouchableOpacity>)}
 
         {/* Status / events */}
         {connected && (

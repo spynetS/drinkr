@@ -35,7 +35,7 @@ export default function HomeScreen() {
 
     function makeid(length) {
       var result           = '';
-      var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
       var charactersLength = characters.length;
       for ( var i = 0; i < length; i++ ) {
         result += characters.charAt(Math.floor(Math.random() * charactersLength));
@@ -43,7 +43,7 @@ export default function HomeScreen() {
       return result;
     }
   
-    setLobbyCode(makeid(6)).then(lobby=>{
+    setLobbyCode(makeid(4)).then(lobby=>{
       setLobby(lobby);
       // if we get a new player from mqtt we should add it the ui
       console.log("sub:",lobby+"/players/add")

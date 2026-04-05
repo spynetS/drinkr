@@ -29,11 +29,20 @@ export function publish(subtopic: string, payload: object) {
 export function subscribe(subtopic: string, handler: (payload: any) => void) {
   const c = getMqttClient();
   const topic = `${TOPIC_PREFIX}/${subtopic}`;
-  c.subscribe(topic, { qos: 1 });
-  c.on('message', (t, p) => {
+  
+  const listener = (t: string, p: Buffer) => {
     if (t === topic) handler(JSON.parse(p.toString()));
-  });
+  };
+
+  c.subscribe(topic, { qos: 1 });
+  c.on('message', listener);
+
+  return () => {
+    c.unsubscribe(topic);
+    c.off('message', listener);
+  };
 }
+
 export function lobbyPublish(subtopic: string, payload: object) {
   getLobbyCode().then(lobby=>{
     publish(`${lobby}/${subtopic}`, payload)
@@ -42,7 +51,7 @@ export function lobbyPublish(subtopic: string, payload: object) {
 }
 
 export function lobbySubscribe(subtopic: string, handler: (payload: any) => void) {
-  getLobbyCode().then(lobby=>{
-    subscribe(`${lobby}/${subtopic}`, handler)
+  return getLobbyCode().then(lobby=>{
+    return subscribe(`${lobby}/${subtopic}`, handler)
   });
 }
