@@ -64,7 +64,7 @@ export default function HomeScreen() {
       setPlayers(prev=>[...prev,player])
     }).catch()
 	};
-
+ 
   return (
 		<ImageBackground
       source={require('@/assets/images/background.jpg')}

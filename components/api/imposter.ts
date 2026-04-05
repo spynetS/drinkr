@@ -1,5 +1,6 @@
 import { words, Word } from "./words"
 import { getPlayers } from "./utils"
+import { lobbyPublish } from "./mqttClient"
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export async function saveNumImposters(numImposters: number) {
@@ -30,13 +31,14 @@ export async function getImposterPlayers() {
   // set the random players to imposter
   // then we shuffle again so the imposters arnt in order
   const shuffled = [...players].sort(() => Math.random() - 0.5);
-  const pl = shuffled.map((player, index) => ({
-    ...player,
-    imposter: index < nI,
-  }));
+    const pl = shuffled.map((player, index) => {
+        player.imposter = index < nI;
+        lobbyPublish("players/imposter", player);
+        return player;
+    });
 
 
-  return [...pl].sort(() => Math.random() - 0.5);
+    return [...pl].sort(() => Math.random() - 0.5);
 }
 
 /**

@@ -1,7 +1,7 @@
 import mqtt, { MqttClient } from 'mqtt';
 import { getLobbyCode } from "./utils.ts"
 
-const BROKER_URL = 'ws://localhost:9001/ws';
+const BROKER_URL = 'ws://192.168.86.39:9001/ws';
 const TOPIC_PREFIX = 'drinkr';
 
 let client: MqttClient | null = null;
