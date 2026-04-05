@@ -1,7 +1,7 @@
 import { Image, View, Text, TouchableOpacity } from "react-native";
 import { StyleSheet } from 'react-native';
 import Button from '@/components/button';
-import axios from 'axios'
+import { startGame } from "@/components/api/utils"
 
 interface Props {
   title: string;
@@ -14,13 +14,8 @@ export default function GameCard({ color, title, description, onPlay }: Props) {
 	let darkColor = darkenHexColor(color,0.7);
 
 	const play = () => {
-
-		axios.post('/events/', {
-      data: description,
-      type: 0,
-      creator: 1,
-      sendto: null,
-    })
+  
+		startGame(title)
       .then(response => console.log(response))
       .catch(error => console.error('Error posting event:', error))
       .finally(() => onPlay?.());

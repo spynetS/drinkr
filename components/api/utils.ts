@@ -9,28 +9,38 @@ type Player = {
 function playerEquals(p1:Player, p2:Player) {
   return (p1.pk !== undefined && p2.pk !== undefined && p1.pk == p2.pk) || p1.name === p2.name;
 }
+import { lobbyPublish } from './mqttClient';
 
-export async function savePlayers(players:Player[]) {
-  console.log("saving", players)
-  await AsyncStorage.setItem('players', JSON.stringify(players));
-}
-
-export async function addPlayer(player:Player) {
-  const raw = await AsyncStorage.getItem("players")
+export async function addPlayer(player: Player) {
+  const raw = await AsyncStorage.getItem('players');
   let players = raw ? JSON.parse(raw) : [];
-  console.log(players)
-  players.push(player)
+  players.push(player);
   await savePlayers(players);
+  lobbyPublish('players/add', player);
   return player;
 }
 
 export async function removePlayer(player: Player) {
-  const raw = await AsyncStorage.getItem("players");
+  const raw = await AsyncStorage.getItem('players');
   let players: Player[] = raw ? JSON.parse(raw) : [];
-  players = players.filter(p => !playerEquals(p,player));
+  players = players.filter(p => !playerEquals(p, player));
   await savePlayers(players);
+  lobbyPublish('players/remove', player);
   return players;
 }
+
+export async function playerPenelty(player: Player) {
+  player.penelties = (player.penelties ?? 0) + 1;
+  const saved = await savePlayer(player);
+  lobbyPublish('players/penalty', saved);
+  return saved;
+}
+
+export async function savePlayers(players:Player[]) {
+    console.log("saving", players)
+  await AsyncStorage.setItem('players', JSON.stringify(players));
+}
+
 /**
 Returns the players
 */
@@ -57,7 +67,16 @@ export async function savePlayer(player: Player) {
   return player;
 }
 
-export async function playerPenelty(player: Player) {
-  player.penelties = (player.penelties ?? 0) + 1;
-  return await savePlayer(player);
+export async function setLobbyCode(code:string) : string {
+    await AsyncStorage.setItem("lobby", code);
+    return code
+}
+
+export async function getLobbyCode() : string {
+    return await AsyncStorage.getItem("lobby");
+}
+
+
+export async function startGame(game:string) {
+    lobbyPublish("startGame",game)
 }

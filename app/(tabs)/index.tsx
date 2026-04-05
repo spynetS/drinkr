@@ -11,7 +11,7 @@ import { Link, router } from 'expo-router';
 import { Avatar } from '@kolking/react-native-avatar';
 import { TextInput, View, Text, ImageBackground,TouchableOpacity, Modal } from "react-native";
 import { useState, useEffect } from "react"
-import { getPlayers, addPlayer, removePlayer } from "@/components/api/utils"
+import { setLobbyCode, getPlayers, addPlayer, removePlayer } from "@/components/api/utils"
 import axios from "axios"
 
 import GameCard from "@/components/game-card";
@@ -26,20 +26,23 @@ export default function HomeScreen() {
   const [offline, setOffline] = useState(true);
   const [players,setPlayers] = useState([]);
 	const [isVisible, setVisible] = useState(false)
-
 	const [playerName, setPlayerName] = useState("")
+  const [lobby, setLobby] = useState("");
 
 	useEffect(()=>{
-    if(!offline){
-		axios.get('/events')
-			.then(response => console.log(response))
-			.catch(error => console.error('Error fetching users:', error));
-
-		axios.get('/users')
-			.then(response => setPlayers(response.data))
-			.catch(error => console.error('Error fetching users:', error));
-	  }
     getPlayers().then(setPlayers).catch()
+
+    function makeid(length) {
+      var result           = '';
+      var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      var charactersLength = characters.length;
+      for ( var i = 0; i < length; i++ ) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+      }
+      return result;
+    }
+    setLobbyCode(makeid(6)).then(setLobby)
+  
 	},[])
 
 	const addUser = () => {
@@ -74,7 +77,7 @@ export default function HomeScreen() {
 			</Modal>
 
 			<View style={styles.top}>
-				<Text style={{fontSize:18, color:"white", fontWeight:"800", padding:5}}  >PLAYERS PLAYING?</Text>
+				<Text style={{fontSize:18, color:"white", fontWeight:"800", padding:5}}  >PLAYERS PLAYING @ {lobby}?</Text>
 				<View style={{flexDirection:"row", justifyContent:"flex-start", alignItems:"flex-start", width:"100%",}} >
 					{players.map((e,index) =>
 						<View key={index} style={{alignItems: "center", gap:3, marginLeft: 5, marginRight:5}} >
