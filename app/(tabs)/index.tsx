@@ -12,6 +12,7 @@ import { Avatar } from '@kolking/react-native-avatar';
 import { TextInput, View, Text, ImageBackground,TouchableOpacity, Modal } from "react-native";
 import { useState, useEffect } from "react"
 import { setLobbyCode, getPlayers, addPlayer, removePlayer } from "@/components/api/utils"
+import {subscribe} from "@/components/api/mqttClient"
 import axios from "axios"
 
 import GameCard from "@/components/game-card";
@@ -41,7 +42,17 @@ export default function HomeScreen() {
       }
       return result;
     }
-    setLobbyCode(makeid(6)).then(setLobby)
+  
+    setLobbyCode(makeid(6)).then(lobby=>{
+      setLobby(lobby);
+      // if we get a new player from mqtt we should add it the ui
+      console.log("sub:",lobby+"/players/add")
+      subscribe(lobby+"/players/add", player=>{
+        addPlayer(player,false).then(player=>{
+          setPlayers(prev=>[...prev,player])
+        })
+      })
+    })
   
 	},[])
 

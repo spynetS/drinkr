@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, SafeAreaView, TouchableOpacity, Modal, Animated } from 'react-native';
-import { subscribe } from '@/components/api/mqttClient';
+import { subscribe, publish } from '@/components/api/mqttClient';
 import Button from '@/components/button';
 
 type Player = {
@@ -18,6 +18,10 @@ export default function LobbyScreen() {
   const [nameFocus, setNameFocus] = useState(false);
 
   const connect = () => {
+    
+    
+    publish(lobby+"/players/add", {name:playerName})
+  
     subscribe(lobby + "/players/penalty", (payload) => {
       if (playerName === payload.name) {
         setPenaltyVisible(true);
