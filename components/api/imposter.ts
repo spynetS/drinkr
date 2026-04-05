@@ -47,7 +47,8 @@ returns a list of words associated with a category
 export function getWords(category: string): Word[] {
   if(category === "Random") {
     const categories = getCategories();
-    const randomCat = categories[Math.floor(Math.random() * categories.length-1)+1];
+    const ran = Math.floor(Math.random() * (categories.length-1))+1;
+    const randomCat = categories[ran];
     return words[randomCat];
   }
   return words[category];
