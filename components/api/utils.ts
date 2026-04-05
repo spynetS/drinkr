@@ -14,6 +14,11 @@ import { lobbyPublish } from './mqttClient';
 export async function addPlayer(player: Player, publish=true) {
     const raw = await AsyncStorage.getItem('players');
     let players = raw ? JSON.parse(raw) : [];
+    const exists = players.some((p: Player) => playerEquals(p, player));
+
+    if (exists)
+        throw new Error("Player already exists")
+
     players.push(player);
     await savePlayers(players);
     if(publish)

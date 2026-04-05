@@ -50,7 +50,7 @@ export default function HomeScreen() {
       subscribe(lobby+"/players/add", player=>{
         addPlayer(player,false).then(player=>{
           setPlayers(prev=>[...prev,player])
-        })
+        }).catch(e=>{})
       })
     })
   
