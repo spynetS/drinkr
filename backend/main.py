@@ -2,10 +2,11 @@ from fastapi import FastAPI
 
 from orm.database import SQLiteDatabase
 from users.user import User
-from users.event import Event
 from orm.relations import Relationships
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+from events.views import Event, router as event_router
 
 app = FastAPI()
 
@@ -26,9 +27,11 @@ database.connect('./db.sqlite')
 User.init(database)
 Event.init(database)
 
+app.include_router(event_router)
+
 @app.get("/")
 def read_root():
-    return { "users":result }
+    return { "users":User.get_all() } 
 
 class UserCreate(BaseModel):
     name: str
@@ -39,8 +42,6 @@ async def user_create(userReq: UserCreate):
     user.name = userReq.name
     user.save()
     return user 
-
-
 
 @app.delete("/user/{pk}")
 async def user_create(pk: int):

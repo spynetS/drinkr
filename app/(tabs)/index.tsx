@@ -2,17 +2,17 @@ import { Image } from 'expo-image';
 import { Platform, StyleSheet } from 'react-native';
 import Button from '@/components/button';
 
-
 import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 
 import { Avatar } from '@kolking/react-native-avatar';
 import { TextInput, View, Text, ImageBackground,TouchableOpacity, Modal } from "react-native";
 import { useState, useEffect } from "react"
-
+import { setLobbyCode, getPlayers, addPlayer, removePlayer } from "@/components/api/utils"
+import {subscribe} from "@/components/api/mqttClient"
 import axios from "axios"
 
 import GameCard from "@/components/game-card";
@@ -24,40 +24,47 @@ axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 
 export default function HomeScreen() {
+  const [offline, setOffline] = useState(true);
   const [players,setPlayers] = useState([]);
 	const [isVisible, setVisible] = useState(false)
-
 	const [playerName, setPlayerName] = useState("")
+  const [lobby, setLobby] = useState("");
 
 	useEffect(()=>{
-		axios.get('/users')
-			.then(response => setPlayers(response.data))
-			.catch(error => console.error('Error fetching users:', error));
-	
+    getPlayers().then(setPlayers).catch()
+
+    function makeid(length) {
+      var result           = '';
+      var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      var charactersLength = characters.length;
+      for ( var i = 0; i < length; i++ ) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+      }
+      return result;
+    }
+  
+    setLobbyCode(makeid(4)).then(lobby=>{
+      setLobby(lobby);
+      // if we get a new player from mqtt we should add it the ui
+      console.log("sub:",lobby+"/players/add")
+      subscribe(lobby+"/players/add", player=>{
+        addPlayer(player,false).then(player=>{
+          setPlayers(prev=>[...prev,player])
+        }).catch(e=>{})
+      })
+    })
+  
 	},[])
 
 	const addUser = () => {
-
 		if (playerName === "") return;
 
-		axios.post('/user/', { name: playerName })
-			.then(response => {
-				setPlayers(prev => [...prev, response.data]);
-				setPlayerName("");
-			})
-			.catch(error => console.error(error));
-
+    addPlayer({name:playerName}).then(player=>{
+      setPlayerName("")
+      setPlayers(prev=>[...prev,player])
+    }).catch()
 	};
-
-	const removePlayer = (rmPlayer) => {
-
-		axios.delete(`/user/${rmPlayer.pk}`)
-			.then(response => console.log(response.data));
-
-		const filtered = players.filter(player => player.pk !== rmPlayer.pk);
-		setPlayers(filtered)
-	}
-
+ 
   return (
 		<ImageBackground
       source={require('@/assets/images/background.jpg')}
@@ -81,11 +88,11 @@ export default function HomeScreen() {
 			</Modal>
 
 			<View style={styles.top}>
-				<Text style={{fontSize:18, color:"white", fontWeight:"800", padding:5}}  >PLAYERS PLAYING?</Text>
+				<Text style={{fontSize:18, color:"white", fontWeight:"800", padding:5}}  >PLAYERS PLAYING @ {lobby}?</Text>
 				<View style={{flexDirection:"row", justifyContent:"flex-start", alignItems:"flex-start", width:"100%",}} >
 					{players.map((e,index) =>
 						<View key={index} style={{alignItems: "center", gap:3, marginLeft: 5, marginRight:5}} >
-							<TouchableOpacity onPress={()=>removePlayer(e)} >
+							<TouchableOpacity onPress={()=>removePlayer(e).then(setPlayers).catch()} >
 								<Avatar colorize={true} name={e.name} size={30} />
 							</TouchableOpacity>								
 							<Text style={{fontSize:12, color:"white"}}>{e.name}</Text>
@@ -99,7 +106,10 @@ export default function HomeScreen() {
 
 			<View style={styles.cardContainer} >
 				<GameCard color="#4a97e3" title="The classic" description="Pellentesque tristique imperdiet tortor.  "/>
-				<GameCard color="#ff43a5" title="The classic" description="Phasellus neque orci, porta a, aliquet quis, semper a, massa.  "/>
+				<GameCard onPlay={()=>router.push({pathname:"imposter", params:{
+          _players:JSON.stringify(players),
+          _offline:JSON.stringify(offline)
+        }})} color="#ff43a5" title="Imposter" description="Everyone gets a word and are say another word associated with it. But one imposter doesnt know the word and are trying to fit in."/>
 				<GameCard color="#fedd1c" title="The classic" description="Donec hendrerit tempor tellus.  "/>
 				<GameCard color="#4ffc8c" title="The classic" description="Donec posuere augue in quam.  "/>
 			</View>

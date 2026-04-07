@@ -31,6 +31,7 @@ class SQLiteDatabase(Database):
         values = "("
         for k, v in model.__dict__.items():
             for key, value in user_fields.items():
+                if v == None: v = "NULL"
                 if k == key:
                     print(k,v)
                     columns += k +", "
