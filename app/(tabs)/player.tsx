@@ -45,6 +45,13 @@ export default function LobbyScreen() {
         setShowRole(true)
       }
     }));
+    _subs.push(subscribe(lobby + "/players/hitster", (payload) => {
+      console.log(payload)
+      if (playerName === payload.name) {
+        setIsImposter(payload.imposter)
+        setShowRole(true)
+      }
+    }));
     _subs.push(subscribe(lobby + "/startGame", (payload) => {
       setEvents(prev => [...prev, payload]);
     }));

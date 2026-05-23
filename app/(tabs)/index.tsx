@@ -12,7 +12,7 @@ import { Avatar } from '@kolking/react-native-avatar';
 import { TextInput, View, Text, ImageBackground,TouchableOpacity, Modal } from "react-native";
 import { useState, useEffect } from "react"
 import { setLobbyCode, getPlayers, addPlayer, removePlayer } from "@/components/api/utils"
-import {subscribe} from "@/components/api/mqttClient"
+import { subscribe } from "@/components/api/mqttClient"
 import axios from "axios"
 
 import GameCard from "@/components/game-card";
@@ -105,7 +105,15 @@ export default function HomeScreen() {
 			<Text style={{fontSize:36, color:'white', fontWeight:'600',marginTop:10, marginBottom:10}}  >LOBBY</Text>
 
 			<View style={styles.cardContainer} >
-				<GameCard color="#4a97e3" title="The classic" description="Pellentesque tristique imperdiet tortor.  "/>
+				<GameCard
+          color="#4a97e3"
+          title="The hitster"
+          description="Music guessing game"
+          onPlay={()=>router.push({pathname:"hitster", params:{
+          _players:JSON.stringify(players),
+          _offline:JSON.stringify(offline)
+        }})} 
+        />
 				<GameCard onPlay={()=>router.push({pathname:"imposter", params:{
           _players:JSON.stringify(players),
           _offline:JSON.stringify(offline)
