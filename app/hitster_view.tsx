@@ -10,6 +10,8 @@ import { getWords } from "@/components/api/imposter"
 import { lobbyPublish } from "@/components/api/mqttClient"
 import MusicCard from "@/components/music-card"
 
+import { getSongsByGenre } from "@/components/api/hitster";
+
 
 const ResultModal = ({ visible, onClose, onResult }) => {
   return (
@@ -62,6 +64,8 @@ const ResultModal = ({ visible, onClose, onResult }) => {
 
 export default function ImposterView() {
   const [players, setPlayers] = useState([]);
+  const [songs, setSongs] = useState([]);
+    const [showSongs, setShowSongs] = useState(1);
   const [word, setWord] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -70,6 +74,14 @@ export default function ImposterView() {
   useEffect(() => {
     lobbyPublish("players/hitster", {});
     setPlayers([0,1,2,3])
+    getSongsByGenre("rock").then(recordings=>{
+        recordings.forEach((record, index) => {
+            record.order = index;
+            console.log(record)
+        })
+
+      setSongs(recordings)
+    }).catch(error=>{})
   }, []);
   
   const handleResult = async (winner) => {
@@ -82,51 +94,62 @@ export default function ImposterView() {
         await playerPenelty(player);
       }
     }
-
     router.back();
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <View pointerEvents="none">
-        <View style={styles.glowTopLeft} />
-        <View style={styles.glowBottomRight} />
-      </View>
+    const changeOrder = (i, dir) => {
+        songs[i].order += dir;
+        const sortedSongs = [...songs].sort((a, b) => b.order - a.order);
+        setSongs(sortedSongs)
+        console.log(sortedSongs)
+    }
 
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.eyebrow}>ROUND START</Text>
-        <Text style={styles.title}>HITSTER</Text>
-        <View style={styles.instructionPill}>
-          <Text style={styles.instructionText}>
-            Organize the songs based by year
-          </Text>
-        </View>
-      </View>
+    return (
+        <SafeAreaView style={styles.container}>
+            <View pointerEvents="none">
+                <View style={styles.glowTopLeft} />
+                <View style={styles.glowBottomRight} />
+            </View>
 
-      {/* Cards grid */}
-      <ScrollView contentContainerStyle={styles.grid}>
-        {players.map((player, i) => (
-          <MusicCard key={i} title="Honeycomb" artist="deafheaven" year="2015" />
-        ))}
-      </ScrollView>
+            {/* Header */}
+            <View style={styles.header}>
+                <Text style={styles.eyebrow}>ROUND START</Text>
+                <Text style={styles.title}>HITSTER</Text>
+                <View style={styles.instructionPill}>
+                    <Text style={styles.instructionText}>
+                        Organize the songs based by year
+                    </Text>
+                </View>
+            </View>
 
-      {/* Footer */}
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => setModalVisible(true)}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.backButtonText}>← New Game</Text>
-      </TouchableOpacity>
+            {/* Cards grid */}
+            <ScrollView contentContainerStyle={styles.grid}>
+                {songs.map((song, i) => (i <= showSongs ?
+                    <MusicCard key={i}
+                        onUp={()=> changeOrder(i,1)}
+                        onDown={()=> changeOrder(i,-1)}
+                        title={song.title}
+                        artist={song["artist-credit"][0]['name']}
+                        year={song["first-release-date"]} /> : (null)
+                ))}
+            </ScrollView>
 
-      <ResultModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onResult={handleResult}
-              />
-    </SafeAreaView>
-  );
+            {/* Footer */}
+            <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => setModalVisible(true)}
+                activeOpacity={0.8}
+            >
+                <Text style={styles.backButtonText}>← New Game</Text>
+            </TouchableOpacity>
+
+            <ResultModal
+                visible={modalVisible}
+                onClose={() => setModalVisible(false)}
+                onResult={handleResult}
+            />
+        </SafeAreaView>
+    );
 }
 
 const styles = StyleSheet.create({

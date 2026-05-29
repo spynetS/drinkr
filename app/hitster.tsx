@@ -12,6 +12,7 @@ import { getCategories, getWords, getImposterPlayers, saveNumImposters } from "@
 
 
 
+
 export default function TabTwoScreen() {
   const [players, setPlayers] = useState([]);
   const [category, setCategory] = useState("");
@@ -22,13 +23,7 @@ export default function TabTwoScreen() {
 
   useEffect(() => {
     getPlayers().then(setPlayers).catch()
-    // get the categories and set it in the state formatted
-    // setCategories(getCategories().map(cat=>{
-    //   const key_formatted = cat.replaceAll("_", " ");
-    //   return { label: key_formatted, value: cat };
-    // }))
 
-  
   }, []);
 
   const getImposterData = () => {
