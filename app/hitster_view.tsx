@@ -4,152 +4,136 @@ import { Platform, StyleSheet, Modal } from 'react-native';
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "react-native";
 import { useLocalSearchParams, router } from 'expo-router';
 import FlipCard from 'react-native-flip-card';
-import { playerPenelty } from "@/components/api/utils"
+import { playerPenelty, Player, getPlayers } from "@/components/api/utils"
 import { getImposterPlayers } from "@/components/api/imposter"
 import { getWords } from "@/components/api/imposter"
 import { lobbyPublish } from "@/components/api/mqttClient"
 import MusicCard from "@/components/music-card"
 
-import { getSongsByGenre } from "@/components/api/hitster";
+import { getHitsterPlayers, getSongsByGenre, HitsterPlayer, Song } from "@/components/api/hitster";
 
 
-const ResultModal = ({ visible, onClose, onResult }) => {
-  return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalCard}>
-          {/* Header */}
-          <Text style={styles.modalEyebrow}>ROUND OVER</Text>
-          <Text style={styles.modalTitle}>Who won?</Text>
-          <Text style={styles.modalSubtitle}>Select the winning team to record the result</Text>
-
-          <View style={styles.modalDivider} />
-
-          {/* Options */}
-          <TouchableOpacity
-            style={styles.imposterWinButton}
-            onPress={() => onResult("imposters")}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.imposterWinIcon}>⚠</Text>
-            <View>
-              <Text style={styles.imposterWinTitle}>Imposters Won</Text>
-              <Text style={styles.imposterWinSub}>The crew was fooled</Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.crewmateWinButton}
-            onPress={() => onResult("crewmates")}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.crewmateWinIcon}>✓</Text>
-            <View>
-              <Text style={styles.crewmateWinTitle}>Crewmates Won</Text>
-              <Text style={styles.crewmateWinSub}>The imposter was caught</Text>
-            </View>
-          </TouchableOpacity>
-
-          <View style={styles.modalDivider} />
-
-          {/* Cancel */}
-          <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
-            <Text style={styles.modalCancel}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
-};
 
 export default function ImposterView() {
-  const [players, setPlayers] = useState([]);
-  const [songs, setSongs] = useState([]);
-    const [showSongs, setShowSongs] = useState(1);
-  const [word, setWord] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [players, setPlayers] = useState<HitsterPlayer[]>([]);
+  const [selectedPlayer, setSelectedPlayer] = useState<number>(0);
 
   const {category} = useLocalSearchParams();
 
   useEffect(() => {
+    getHitsterPlayers("rock").then(setPlayers).catch(console.log)
     lobbyPublish("players/hitster", {});
-    setPlayers([0,1,2,3])
-    getSongsByGenre("rock").then(recordings=>{
-        recordings.forEach((record, index) => {
-            record.order = index;
-            console.log(record)
-        })
 
-      setSongs(recordings)
-    }).catch(error=>{})
   }, []);
-  
-  const handleResult = async (winner) => {
-    setModalVisible(false);
 
-    for (const player of players) {
-      if (
-        true
-      ) {
-        await playerPenelty(player);
-      }
-    }
-    router.back();
+
+  const getSelectedPlayer = () => {return players[selectedPlayer]};
+
+  const getNewSong = () => {
+    if (selectedPlayer === null) return;
+
+    setPlayers(prev => {
+      const player = prev[selectedPlayer];
+      if (!player || player.songs.length === 0) return prev;
+
+      const randomSong =
+        player.songs[Math.floor(Math.random() * player.songs.length)];
+
+      return prev.map((p, idx) =>
+        idx === selectedPlayer
+          ? {
+            ...p,
+            timeLineSongs: [...p.timeLineSongs, randomSong],
+          }
+          : p
+      );
+    });
   };
 
-    const changeOrder = (i, dir) => {
-        songs[i].order += dir;
-        const sortedSongs = [...songs].sort((a, b) => b.order - a.order);
-        setSongs(sortedSongs)
-        console.log(sortedSongs)
-    }
+const changeOrder = (i: number, dir: number) => {
+  setPlayers(prev => {
+    const next = [...prev];
+    const player = next[selectedPlayer];
+    if (!player) return prev;
 
-    return (
-        <SafeAreaView style={styles.container}>
-            <View pointerEvents="none">
-                <View style={styles.glowTopLeft} />
-                <View style={styles.glowBottomRight} />
-            </View>
+    const songs = [...player.timeLineSongs];
+    const swapIndex = i + dir;
 
-            {/* Header */}
-            <View style={styles.header}>
-                <Text style={styles.eyebrow}>ROUND START</Text>
-                <Text style={styles.title}>HITSTER</Text>
-                <View style={styles.instructionPill}>
-                    <Text style={styles.instructionText}>
-                        Organize the songs based by year
-                    </Text>
-                </View>
-            </View>
+    // Bounds check
+    if (swapIndex < 0 || swapIndex >= songs.length) return prev;
 
-            {/* Cards grid */}
-            <ScrollView contentContainerStyle={styles.grid}>
-                {songs.map((song, i) => (i <= showSongs ?
-                    <MusicCard key={i}
-                        onUp={()=> changeOrder(i,1)}
-                        onDown={()=> changeOrder(i,-1)}
-                        title={song.title}
-                        artist={song["artist-credit"][0]['name']}
-                        year={song["first-release-date"]} /> : (null)
-                ))}
-            </ScrollView>
+    // Swap the two songs
+    [songs[i], songs[swapIndex]] = [songs[swapIndex], songs[i]];
 
-            {/* Footer */}
-            <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => setModalVisible(true)}
-                activeOpacity={0.8}
-            >
-                <Text style={styles.backButtonText}>← New Game</Text>
-            </TouchableOpacity>
-
-            <ResultModal
-                visible={modalVisible}
-                onClose={() => setModalVisible(false)}
-                onResult={handleResult}
-            />
-        </SafeAreaView>
+    return next.map((p, idx) =>
+      idx === selectedPlayer
+        ? { ...p, timeLineSongs: songs }
+        : p
     );
+  });
+};
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View pointerEvents="none">
+        <View style={styles.glowTopLeft} />
+        <View style={styles.glowBottomRight} />
+      </View>
+
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.eyebrow}>ROUND START</Text>
+        <Text style={styles.title}>HITSTER</Text>
+        <View style={styles.instructionPill}>
+          <Text style={styles.instructionText}>
+                                                 Organize the songs based by year
+          </Text>
+        </View>
+        <View style={{flexDirection:"row", gap:"10px"}} >
+          {players.map((player, index) => {
+            const isSelected = index === selectedPlayer;
+
+            return (
+              <TouchableOpacity
+                key={player.player.name}
+                style={isSelected ? styles.backButtonSelected : styles.backButton}
+                onPress={() => setSelectedPlayer(index)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.backButtonText}>
+                  {player.player.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+
+        </View>
+      </View>
+
+      {/* Cards grid */}
+      <ScrollView contentContainerStyle={styles.grid}>
+        {players[selectedPlayer]?.timeLineSongs.map((song, i) => (
+          <MusicCard
+            key={i}
+            onUp={()=> changeOrder(i,-1)}
+            onDown={()=> changeOrder(i,1)}
+            title={song.title}
+            artist={song.artist}
+            year={song.releaseDate} /> 
+        ))}
+      </ScrollView>
+
+      {/* Footer */}
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => getNewSong()}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.backButtonText}>← New Game</Text>
+      </TouchableOpacity>
+
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -338,6 +322,15 @@ const styles = StyleSheet.create({
   // Footer
   backButton: {
     backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+    borderRadius: 14,
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    marginBottom: 12,
+  },
+  backButtonSelected: {
+    backgroundColor: "rgba(255,255,255,0.1)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.1)",
     borderRadius: 14,

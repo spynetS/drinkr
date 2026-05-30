@@ -1,27 +1,77 @@
+import { getPlayers, Player } from "@/components/api/utils"
 
-export type MusicBrainzRecording = {
-    id: string;
-    title: string;
-    "artist-credit": {
-        name: string;
-    }[];
-    "first-release-date"?: string;
-    order:number;
+export type HitsterPlayer = {
+  songs: Song[];
+  timeLineSongs: Song[];
+  player: Player;
 };
 
-export async function getSongsByGenre(genre: string) : Promise<void> {
-    const url = `https://musicbrainz.org/ws/2/recording?query=tag:${genre}&fmt=json&limit=10`;
+export interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  coverArt?: string;
+  releaseDate: string;
+}
 
-    const res = await fetch(url, {
-        headers: {
-            "User-Agent": "MyMusicApp/1.0 ( myemail@example.com )",
-        },
-    });
+const HEADERS = { "User-Agent": "MyMusicApp/1.0 ( myemail@example.com )" };
 
-    if (!res.ok) {
-        throw new Error(`MusicBrainz error: ${res.status}`);
+async function getCoverArt(releaseId: string): Promise<string | undefined> {
+  try {
+    const res = await fetch(
+      `https://coverartarchive.org/release/${releaseId}/front-250`,
+      { headers: HEADERS, redirect: "follow" }
+    );
+    // Returns a redirect to the actual image — use the final URL
+    return res.ok ? res.url : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export async function getSongsByGenre(genre: string): Promise<Song[]> {
+  const url = `https://musicbrainz.org/ws/2/recording?query=tag:${genre}&fmt=json&limit=10`;
+  const res = await fetch(url, { headers: HEADERS });
+
+  if (!res.ok) throw new Error(`MusicBrainz error: ${res.status}`);
+
+  const data = await res.json();
+  const recordings = data.recordings ?? [];
+
+  return Promise.all(
+    recordings.map(async (rec: any) => {
+      const releaseId = rec.releases?.[0]?.id;
+      const coverArt = releaseId ? await getCoverArt(releaseId) : undefined;
+
+      return {
+        id: rec.id,
+        title: rec.title,
+        artist: rec["artist-credit"]?.[0]?.name ?? "Unknown",
+        releaseDate: rec["first-release-date"],
+        coverArt,
+      };
+    })
+  );
+}
+
+export async function getHitsterPlayers(genre: string) : Promise<HitsterPlayer[]> {
+
+  const players = await getPlayers();
+  const hitsterPlayers : HitsterPlayer[] = [];
+
+  const songs: Song[] = await getSongsByGenre(genre);
+
+  players.forEach(player=>{
+    
+    const hplayer: HitsterPlayer = {
+      songs: songs,
+      timeLineSongs: [],
+      player: player
     }
 
-    const data = await res.json();
-    return data.recordings as MusicBrainzRecording[];
+    hitsterPlayers.push(hplayer);
+
+  })
+  
+  return hitsterPlayers;
 }

@@ -17,7 +17,7 @@ export default function MusicCard({
       <View style={styles.glow} />
 
       {/* Album art */}
-      <View style={styles.imageWrap}>
+      <View style={image ? styles.imageWrap : {display:"none"}}>
         <Image source={{ uri: image }} style={styles.image} />
       </View>
 

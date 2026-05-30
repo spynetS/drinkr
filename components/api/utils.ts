@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-type Player = {
+export type Player = {
     name: string;
     pk?: number;
     penelties?:number;
